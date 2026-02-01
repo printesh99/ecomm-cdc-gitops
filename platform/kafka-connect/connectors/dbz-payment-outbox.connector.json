@@ -1,0 +1,31 @@
+{
+  "name": "dbz-payment-outbox",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "database.hostname": "PATRONI_LEADER_SERVICE_DNS",
+    "database.port": "5432",
+    "database.user": "debezium",
+    "database.password": "CHANGE_ME",
+    "database.dbname": "ecomm",
+    "database.server.name": "ecomm",
+    "plugin.name": "pgoutput",
+    "slot.name": "dbz_payment_outbox_slot",
+    "publication.name": "dbz_payment_outbox_pub",
+    "publication.autocreate.mode": "filtered",
+    "schema.include.list": "payment",
+    "table.include.list": "payment.outbox_event",
+    "tombstones.on.delete": "false",
+    "transforms": "outbox",
+    "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
+    "transforms.outbox.table.field.event.id": "id",
+    "transforms.outbox.table.field.aggregate.type": "aggregate_type",
+    "transforms.outbox.table.field.aggregate.id": "aggregate_id",
+    "transforms.outbox.table.field.type": "event_type",
+    "transforms.outbox.table.field.payload": "payload",
+    "transforms.outbox.table.field.timestamp": "created_at",
+    "transforms.outbox.route.by.field": "event_type",
+    "transforms.outbox.route.topic.replacement": "ecomm.payment.${routedByValue}.v1",
+    "transforms.outbox.route.key.field": "aggregate_id"
+  }
+}
