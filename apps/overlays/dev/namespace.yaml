@@ -3,5 +3,5 @@ kind: Namespace
 metadata:
   name: ecomm
   labels:
-    name: ecomm
+    app.kubernetes.io/part-of: ecomm
 

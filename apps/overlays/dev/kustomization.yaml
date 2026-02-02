@@ -3,8 +3,10 @@ kind: Kustomization
 
 namespace: ecomm
 
-commonLabels:
-  app.kubernetes.io/part-of: ecomm
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: ecomm
 
 resources:
   - namespace.yaml

@@ -4,13 +4,13 @@ metadata:
   name: ecomm-platform-kafka-connect
   namespace: openshift-gitops
 spec:
-  project: default
+  project: ecomm
   source:
-    repoURL: https://github.com/printesh99/ecomm-cdc-gitops.git
+    repoURL: 'https://github.com/printesh99/ecomm-cdc-gitops.git'
     targetRevision: main
     path: platform/kafka-connect/manifests/strimzi-kafkaconnector
   destination:
-    server: https://kubernetes.default.svc
+    server: 'https://kubernetes.default.svc'
     namespace: ecomm-streaming
   syncPolicy:
     automated:
