@@ -18,7 +18,7 @@ spec:
     plugin.name: "pgoutput"
     slot.name: "dbz_ecomm"
     publication.name: "dbz_pub_ecomm"
-    publication.autocreate.mode: "filtered"
+    publication.autocreate.mode: "disabled"
 
     snapshot.mode: "initial"
     topic.prefix: "ecomm"
