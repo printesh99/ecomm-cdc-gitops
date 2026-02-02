@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: ecomm
+  namespace: openshift-gitops
+spec:
+  description: Ecomm demo project (apps + platform)
+  sourceRepos:
+    - "https://github.com/printesh99/ecomm-cdc-gitops.git"
+    - "https://github.com/printesh99/ecomm-cdc-microservices.git"
+  destinations:
+    - namespace: ecomm
+      server: https://kubernetes.default.svc
+    - namespace: ecomm-streaming
+      server: https://kubernetes.default.svc
+    - namespace: cicd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+

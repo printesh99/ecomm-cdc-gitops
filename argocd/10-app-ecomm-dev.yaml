@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ecomm-dev
+  namespace: openshift-gitops
+spec:
+  project: ecomm
+  source:
+    repoURL: "https://github.com/printesh99/ecomm-cdc-gitops.git"
+    targetRevision: main
+    path: apps/overlays/dev
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: ecomm
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
