@@ -5,73 +5,182 @@ metadata:
   namespace: db
 data:
   outbox-test.sql: |
-    -- CartCheckedOut
-    INSERT INTO cart.outbox_event (aggregate_type, aggregate_id, event_type, payload, created_at)
-    VALUES (
-      'cart.CartCheckedOut.v1',
-      'cart-1',
-      'CartCheckedOut',
-      '{"event_id":"11111111-1111-1111-1111-111111111111","event_type":"CartCheckedOut","event_version":1,"producer":"cart-service","occurred_at":"2026-02-03T10:00:00Z","correlation_id":"corr-1","key":{"cart_id":"cart-1"},"data":{"cart_id":"cart-1","customer_id":"cust-1","currency":"USD","total_amount":50.0,"items":[{"product_id":"sku-1","qty":1,"unit_price":50.0}]}}'::jsonb,
-      now()
-    )
-    ON CONFLICT DO NOTHING;
+    DO $$
+    DECLARE
+      cart_id text := 'cart-' || substr(md5(random()::text), 1, 8);
+      order_id text := 'ord-' || substr(md5(random()::text), 1, 8);
+      payment_id text := 'pay-' || substr(md5(random()::text), 1, 8);
+      payment_fail_id text := 'pay-' || substr(md5(random()::text), 1, 8);
+      shipment_id text := 'ship-' || substr(md5(random()::text), 1, 8);
+      corr text := 'corr-' || substr(md5(random()::text), 1, 8);
+      ts text := to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"');
+      eid uuid;
+    BEGIN
+      -- CartCheckedOut
+      eid := gen_random_uuid();
+      INSERT INTO cart.outbox_event (aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        'cart.CartCheckedOut.v1',
+        cart_id,
+        'CartCheckedOut',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'CartCheckedOut',
+          'event_version', 1,
+          'producer', 'cart-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('cart_id', cart_id),
+          'data', jsonb_build_object(
+            'cart_id', cart_id,
+            'customer_id', 'cust-1',
+            'currency', 'USD',
+            'total_amount', 50.0,
+            'items', jsonb_build_array(
+              jsonb_build_object('product_id', 'sku-1', 'qty', 1, 'unit_price', 50.0)
+            )
+          )
+        ),
+        now()
+      );
 
-    -- OrderCreated
-    INSERT INTO orders.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
-    VALUES (
-      '22222222-2222-2222-2222-222222222222',
-      'orders.OrderCreated.v1',
-      'ord-1',
-      'OrderCreated',
-      '{"event_id":"22222222-2222-2222-2222-222222222222","event_type":"OrderCreated","event_version":1,"producer":"order-service","occurred_at":"2026-02-03T10:01:00Z","correlation_id":"corr-2","key":{"order_id":"ord-1"},"data":{"order_id":"ord-1","customer_id":"cust-1","currency":"USD","total_amount":50.0,"items":[{"product_id":"sku-1","qty":1,"unit_price":50.0,"line_total":50.0}]}}'::jsonb,
-      now()
-    )
-    ON CONFLICT DO NOTHING;
+      -- OrderCreated
+      eid := gen_random_uuid();
+      INSERT INTO orders.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'orders.OrderCreated.v1',
+        order_id,
+        'OrderCreated',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'OrderCreated',
+          'event_version', 1,
+          'producer', 'order-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'order_id', order_id,
+            'customer_id', 'cust-1',
+            'currency', 'USD',
+            'total_amount', 50.0,
+            'items', jsonb_build_array(
+              jsonb_build_object('product_id', 'sku-1', 'qty', 1, 'unit_price', 50.0, 'line_total', 50.0)
+            )
+          )
+        ),
+        now()
+      );
 
-    -- PaymentAuthorized
-    INSERT INTO payment.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
-    VALUES (
-      '33333333-3333-3333-3333-333333333333',
-      'payment.PaymentAuthorized.v1',
-      'ord-1',
-      'PaymentAuthorized',
-      '{"event_id":"33333333-3333-3333-3333-333333333333","event_type":"PaymentAuthorized","event_version":1,"producer":"payment-service","occurred_at":"2026-02-03T10:02:00Z","correlation_id":"corr-3","key":{"order_id":"ord-1"},"data":{"payment_id":"pay-1","order_id":"ord-1","amount":50.0,"currency":"USD","status":"AUTHORIZED","provider_ref":"auth-123"}}'::jsonb,
-      now()
-    )
-    ON CONFLICT DO NOTHING;
+      -- PaymentAuthorized
+      eid := gen_random_uuid();
+      INSERT INTO payment.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'payment.PaymentAuthorized.v1',
+        order_id,
+        'PaymentAuthorized',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'PaymentAuthorized',
+          'event_version', 1,
+          'producer', 'payment-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'payment_id', payment_id,
+            'order_id', order_id,
+            'amount', 50.0,
+            'currency', 'USD',
+            'status', 'AUTHORIZED',
+            'provider_ref', 'auth-123'
+          )
+        ),
+        now()
+      );
 
-    -- PaymentFailed
-    INSERT INTO payment.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
-    VALUES (
-      '44444444-4444-4444-4444-444444444444',
-      'payment.PaymentFailed.v1',
-      'ord-1',
-      'PaymentFailed',
-      '{"event_id":"44444444-4444-4444-4444-444444444444","event_type":"PaymentFailed","event_version":1,"producer":"payment-service","occurred_at":"2026-02-03T10:03:00Z","correlation_id":"corr-4","key":{"order_id":"ord-1"},"data":{"payment_id":"pay-2","order_id":"ord-1","amount":50.0,"currency":"USD","status":"FAILED","reason":"card_declined"}}'::jsonb,
-      now()
-    )
-    ON CONFLICT DO NOTHING;
+      -- PaymentFailed
+      eid := gen_random_uuid();
+      INSERT INTO payment.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'payment.PaymentFailed.v1',
+        order_id,
+        'PaymentFailed',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'PaymentFailed',
+          'event_version', 1,
+          'producer', 'payment-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'payment_id', payment_fail_id,
+            'order_id', order_id,
+            'amount', 50.0,
+            'currency', 'USD',
+            'status', 'FAILED',
+            'reason', 'card_declined'
+          )
+        ),
+        now()
+      );
 
-    -- OrderPaid
-    INSERT INTO orders.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
-    VALUES (
-      '55555555-5555-5555-5555-555555555555',
-      'orders.OrderPaid.v1',
-      'ord-1',
-      'OrderPaid',
-      '{"event_id":"55555555-5555-5555-5555-555555555555","event_type":"OrderPaid","event_version":1,"producer":"order-service","occurred_at":"2026-02-03T10:04:00Z","correlation_id":"corr-5","key":{"order_id":"ord-1"},"data":{"order_id":"ord-1","status":"PAID"}}'::jsonb,
-      now()
-    )
-    ON CONFLICT DO NOTHING;
+      -- OrderPaid
+      eid := gen_random_uuid();
+      INSERT INTO orders.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'orders.OrderPaid.v1',
+        order_id,
+        'OrderPaid',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'OrderPaid',
+          'event_version', 1,
+          'producer', 'order-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'order_id', order_id,
+            'status', 'PAID'
+          )
+        ),
+        now()
+      );
 
-    -- ShipmentCreated
-    INSERT INTO shipping.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
-    VALUES (
-      '66666666-6666-6666-6666-666666666666',
-      'shipping.ShipmentCreated.v1',
-      'ord-1',
-      'ShipmentCreated',
-      '{"event_id":"66666666-6666-6666-6666-666666666666","event_type":"ShipmentCreated","event_version":1,"producer":"shipping-service","occurred_at":"2026-02-03T10:05:00Z","correlation_id":"corr-6","key":{"order_id":"ord-1"},"data":{"shipment_id":"ship-1","order_id":"ord-1","status":"CREATED","address":{"line1":"123 Main","city":"Austin","state":"TX","zip":"78701"}}}'::jsonb,
-      now()
-    )
-    ON CONFLICT DO NOTHING;
+      -- ShipmentCreated
+      eid := gen_random_uuid();
+      INSERT INTO shipping.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'shipping.ShipmentCreated.v1',
+        order_id,
+        'ShipmentCreated',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'ShipmentCreated',
+          'event_version', 1,
+          'producer', 'shipping-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'shipment_id', shipment_id,
+            'order_id', order_id,
+            'status', 'CREATED',
+            'address', jsonb_build_object(
+              'line1', '123 Main',
+              'city', 'Austin',
+              'state', 'TX',
+              'zip', '78701'
+            )
+          )
+        ),
+        now()
+      );
+    END $$;

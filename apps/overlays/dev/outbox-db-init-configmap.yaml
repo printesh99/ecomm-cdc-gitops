@@ -3,12 +3,11 @@ kind: ConfigMap
 metadata:
   name: outbox-db-init-sql
   namespace: db
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-    argocd.argoproj.io/sync-wave: "-1"
 data:
   init.sql: |
+    -- Ensure UUID generator is available
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
     -- Grants for Debezium
     GRANT USAGE ON SCHEMA cart, catalog, orders, payment, shipping TO debezium;
     GRANT SELECT ON ALL TABLES IN SCHEMA cart, catalog, orders, payment, shipping TO debezium;
