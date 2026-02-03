@@ -17,7 +17,7 @@ spec:
     plugin.name: pgoutput
     slot.name: ecomm_outbox_slot
     publication.name: dbz_outbox_pub
-    publication.autocreate.mode: filtered
+    publication.autocreate.mode: disabled
     table.include.list: cart.outbox_event,catalog.outbox_event,orders.outbox_event,payment.outbox_event,shipping.outbox_event
     topic.prefix: ecomm
     snapshot.mode: no_data
