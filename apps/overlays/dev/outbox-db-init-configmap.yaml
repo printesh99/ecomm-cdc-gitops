@@ -3,6 +3,10 @@ kind: ConfigMap
 metadata:
   name: outbox-db-init-sql
   namespace: db
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/sync-wave: "-1"
 data:
   init.sql: |
     -- Ensure UUID generator is available
