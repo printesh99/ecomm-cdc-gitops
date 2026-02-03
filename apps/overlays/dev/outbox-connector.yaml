@@ -3,6 +3,8 @@ kind: KafkaConnector
 metadata:
   name: ecomm-outbox
   namespace: ecomm-streaming
+  annotations:
+    strimzi.io/restart: "manual"
   labels:
     strimzi.io/cluster: my-connect-cluster
 spec:

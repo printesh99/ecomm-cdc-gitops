@@ -5,7 +5,7 @@ metadata:
   namespace: db
   annotations:
     argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
     argocd.argoproj.io/sync-wave: "10"
     run_id: "1770145877"
 spec:
