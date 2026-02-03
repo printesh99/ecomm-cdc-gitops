@@ -15,7 +15,6 @@ resources:
   - orders.yaml
   - payment.yaml
   - shipping.yaml
-  - outbox-db-init-configmap.yaml
   - outbox-db-init-job.yaml
   - outbox-connector.yaml
   - outbox-test-configmap.yaml

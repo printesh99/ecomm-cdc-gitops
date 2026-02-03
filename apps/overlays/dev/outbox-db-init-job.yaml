@@ -26,15 +26,20 @@ spec:
           value: postgres
         - name: PGDATABASE
           value: ecomm
-        volumeMounts:
-        - name: sql
-          mountPath: /sql
         command: ["bash","-lc"]
-        args: ["psql -v ON_ERROR_STOP=1 -f /sql/init.sql"]
-      volumes:
-      - name: sql
-        configMap:
-          name: outbox-db-init-sql
-          items:
-          - key: init.sql
-            path: init.sql
+        args:
+        - |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+          GRANT USAGE ON SCHEMA cart, catalog, orders, payment, shipping TO debezium;
+          GRANT SELECT ON ALL TABLES IN SCHEMA cart, catalog, orders, payment, shipping TO debezium;
+          ALTER DEFAULT PRIVILEGES IN SCHEMA cart, catalog, orders, payment, shipping
+            GRANT SELECT ON TABLES TO debezium;
+          DROP PUBLICATION IF EXISTS dbz_outbox_pub;
+          CREATE PUBLICATION dbz_outbox_pub FOR TABLE
+            cart.outbox_event,
+            catalog.outbox_event,
+            orders.outbox_event,
+            payment.outbox_event,
+            shipping.outbox_event;
+          SQL
