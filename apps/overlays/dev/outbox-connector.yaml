@@ -20,7 +20,7 @@ spec:
     publication.autocreate.mode: filtered
     table.include.list: cart.outbox_event,catalog.outbox_event,orders.outbox_event,payment.outbox_event,shipping.outbox_event
     topic.prefix: ecomm
-    snapshot.mode: never
+    snapshot.mode: no_data
     transforms: outbox
     transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
     transforms.outbox.route.by.field: aggregate_type
