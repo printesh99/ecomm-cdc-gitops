@@ -7,7 +7,7 @@ metadata:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
     argocd.argoproj.io/sync-wave: "0"
-    run_id: "1770201589"
+    run_id: "1770203302"
 spec:
   backoffLimit: 0
   template:
@@ -41,7 +41,13 @@ spec:
           psql -v ON_ERROR_STOP=1 <<'SQL'
           CREATE EXTENSION IF NOT EXISTS "pgcrypto";
           GRANT USAGE ON SCHEMA cart, catalog, orders, payment, shipping TO debezium;
-          GRANT SELECT ON ALL TABLES IN SCHEMA cart, catalog, orders, payment, shipping TO debezium;
+          GRANT SELECT ON TABLE
+            cart.outbox_event,
+            catalog.outbox_event,
+            orders.outbox_event,
+            payment.outbox_event,
+            shipping.outbox_event
+          TO debezium;
           ALTER DEFAULT PRIVILEGES IN SCHEMA cart, catalog, orders, payment, shipping
             GRANT SELECT ON TABLES TO debezium;
           DROP PUBLICATION IF EXISTS dbz_outbox_pub;
