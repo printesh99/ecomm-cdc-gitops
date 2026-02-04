@@ -8,7 +8,7 @@ metadata:
     argocd.argoproj.io/instance: ecomm-db
   annotations:
     argocd.argoproj.io/sync-wave: "0"
-    run_id: "1770215768"
+    run_id: "1770242129"
 spec:
   backoffLimit: 0
   template:
