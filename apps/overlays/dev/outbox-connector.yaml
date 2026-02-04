@@ -4,7 +4,7 @@ metadata:
   name: ecomm-outbox
   namespace: ecomm-streaming
   annotations:
-    strimzi.io/restart: "1770195221"
+    strimzi.io/restart: "1770201594"
   labels:
     strimzi.io/cluster: my-connect-cluster
 spec:
