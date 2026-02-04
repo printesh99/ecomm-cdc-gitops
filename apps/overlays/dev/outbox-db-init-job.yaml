@@ -21,12 +21,20 @@ spec:
           value: pg-ha-primary.db.svc.cluster.local
         - name: PGPORT
           value: "5432"
-        - name: PGUSER
-          value: postgres
-        - name: PGPASSWORD
-          value: postgres
         - name: PGDATABASE
           value: ecomm
+        - name: PGSSLMODE
+          value: require
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: pg-ha-pguser-postgres
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pg-ha-pguser-postgres
+              key: password
         command: ["bash","-lc"]
         args:
         - |
