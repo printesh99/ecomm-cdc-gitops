@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ecomm-db
+  namespace: openshift-gitops
+spec:
+  project: ecomm
+  source:
+    repoURL: "https://github.com/printesh99/ecomm-cdc-gitops.git"
+    targetRevision: main
+    path: apps/overlays/dev-db
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: db
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -15,10 +15,7 @@ resources:
   - orders.yaml
   - payment.yaml
   - shipping.yaml
-  - outbox-db-init-job.yaml
   - outbox-connector.yaml
-  - outbox-test-configmap.yaml
-  - outbox-test-job.yaml
 images:
   - name: catalog-service
     newName: image-registry.openshift-image-registry.svc:5000/ecomm/catalog-service

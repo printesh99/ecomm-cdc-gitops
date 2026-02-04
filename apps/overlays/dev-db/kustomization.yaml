@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../dev/outbox-db-init-job.yaml
+  - ../dev/outbox-test-configmap.yaml
+  - ../dev/outbox-test-job.yaml
