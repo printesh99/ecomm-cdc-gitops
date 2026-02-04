@@ -28,12 +28,12 @@ spec:
         - name: PGUSER
           valueFrom:
             secretKeyRef:
-              name: pg-ha-pguser-postgres
+              name: pg-ha-pguser-pg-ha
               key: user
         - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
-              name: pg-ha-pguser-postgres
+              name: pg-ha-pguser-pg-ha
               key: password
         volumeMounts:
         - name: sql
