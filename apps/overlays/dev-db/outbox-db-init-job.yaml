@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: outbox-db-init
+  namespace: db
+  labels:
+    app.kubernetes.io/part-of: ecomm
+    argocd.argoproj.io/instance: ecomm-db
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    run_id: "1770215768"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: psql
+        image: postgres:16
+        env:
+        - name: PGHOST
+          value: pg-ha-primary.db.svc.cluster.local
+        - name: PGPORT
+          value: "5432"
+        - name: PGDATABASE
+          value: ecomm
+        - name: PGSSLMODE
+          value: require
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: pg-ha-pguser-pg-ha
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pg-ha-pguser-pg-ha
+              key: password
+        command: ["bash","-lc"]
+        args:
+        - |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+          GRANT USAGE ON SCHEMA cart, catalog, orders, payment, shipping TO debezium;
+          GRANT SELECT ON TABLE
+            cart.outbox_event,
+            catalog.outbox_event,
+            orders.outbox_event,
+            payment.outbox_event,
+            shipping.outbox_event
+          TO debezium;
+          ALTER DEFAULT PRIVILEGES IN SCHEMA cart, catalog, orders, payment, shipping
+            GRANT SELECT ON TABLES TO debezium;
+          DROP PUBLICATION IF EXISTS dbz_outbox_pub;
+          CREATE PUBLICATION dbz_outbox_pub FOR TABLE
+            cart.outbox_event,
+            catalog.outbox_event,
+            orders.outbox_event,
+            payment.outbox_event,
+            shipping.outbox_event;
+          SQL

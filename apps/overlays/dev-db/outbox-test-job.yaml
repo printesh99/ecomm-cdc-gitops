@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: outbox-smoke-test
+  namespace: db
+  labels:
+    app.kubernetes.io/part-of: ecomm
+    argocd.argoproj.io/instance: ecomm-db
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    run_id: "1770215768"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: psql
+        image: postgres:16
+        env:
+        - name: PGHOST
+          value: pg-ha-primary.db.svc.cluster.local
+        - name: PGPORT
+          value: "5432"
+        - name: PGDATABASE
+          value: ecomm
+        - name: PGSSLMODE
+          value: require
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: pg-ha-pguser-pg-ha
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pg-ha-pguser-pg-ha
+              key: password
+        volumeMounts:
+        - name: sql
+          mountPath: /sql
+        command: ["bash","-lc"]
+        args: ["psql -v ON_ERROR_STOP=1 -f /sql/outbox-test.sql"]
+      volumes:
+      - name: sql
+        configMap:
+          name: outbox-test-sql
+          items:
+          - key: outbox-test.sql
+            path: outbox-test.sql

@@ -1,0 +1,187 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: outbox-test-sql
+  namespace: db
+data:
+  outbox-test.sql: |
+    DO $$
+    DECLARE
+      cart_id text := 'cart-' || substr(md5(random()::text), 1, 8);
+      order_id text := 'ord-' || substr(md5(random()::text), 1, 8);
+      payment_id text := 'pay-' || substr(md5(random()::text), 1, 8);
+      payment_fail_id text := 'pay-' || substr(md5(random()::text), 1, 8);
+      shipment_id text := 'ship-' || substr(md5(random()::text), 1, 8);
+      corr text := 'corr-' || substr(md5(random()::text), 1, 8);
+      ts text := to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"');
+      eid uuid;
+    BEGIN
+      -- CartCheckedOut
+      eid := gen_random_uuid();
+      INSERT INTO cart.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'cart.CartCheckedOut.v1',
+        cart_id,
+        'CartCheckedOut',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'CartCheckedOut',
+          'event_version', 1,
+          'producer', 'cart-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('cart_id', cart_id),
+          'data', jsonb_build_object(
+            'cart_id', cart_id,
+            'customer_id', 'cust-1',
+            'currency', 'USD',
+            'total_amount', 50.0,
+            'items', jsonb_build_array(
+              jsonb_build_object('product_id', 'sku-1', 'qty', 1, 'unit_price', 50.0)
+            )
+          )
+        ),
+        now()
+      );
+
+      -- OrderCreated
+      eid := gen_random_uuid();
+      INSERT INTO orders.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'orders.OrderCreated.v1',
+        order_id,
+        'OrderCreated',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'OrderCreated',
+          'event_version', 1,
+          'producer', 'order-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'order_id', order_id,
+            'customer_id', 'cust-1',
+            'currency', 'USD',
+            'total_amount', 50.0,
+            'items', jsonb_build_array(
+              jsonb_build_object('product_id', 'sku-1', 'qty', 1, 'unit_price', 50.0, 'line_total', 50.0)
+            )
+          )
+        ),
+        now()
+      );
+
+      -- PaymentAuthorized
+      eid := gen_random_uuid();
+      INSERT INTO payment.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'payment.PaymentAuthorized.v1',
+        order_id,
+        'PaymentAuthorized',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'PaymentAuthorized',
+          'event_version', 1,
+          'producer', 'payment-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'payment_id', payment_id,
+            'order_id', order_id,
+            'amount', 50.0,
+            'currency', 'USD',
+            'status', 'AUTHORIZED',
+            'provider_ref', 'auth-123'
+          )
+        ),
+        now()
+      );
+
+      -- PaymentFailed
+      eid := gen_random_uuid();
+      INSERT INTO payment.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'payment.PaymentFailed.v1',
+        order_id,
+        'PaymentFailed',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'PaymentFailed',
+          'event_version', 1,
+          'producer', 'payment-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'payment_id', payment_fail_id,
+            'order_id', order_id,
+            'amount', 50.0,
+            'currency', 'USD',
+            'status', 'FAILED',
+            'reason', 'card_declined'
+          )
+        ),
+        now()
+      );
+
+      -- OrderPaid
+      eid := gen_random_uuid();
+      INSERT INTO orders.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'orders.OrderPaid.v1',
+        order_id,
+        'OrderPaid',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'OrderPaid',
+          'event_version', 1,
+          'producer', 'order-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'order_id', order_id,
+            'status', 'PAID'
+          )
+        ),
+        now()
+      );
+
+      -- ShipmentCreated
+      eid := gen_random_uuid();
+      INSERT INTO shipping.outbox_event (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+      VALUES (
+        eid,
+        'shipping.ShipmentCreated.v1',
+        order_id,
+        'ShipmentCreated',
+        jsonb_build_object(
+          'event_id', eid::text,
+          'event_type', 'ShipmentCreated',
+          'event_version', 1,
+          'producer', 'shipping-service',
+          'occurred_at', ts,
+          'correlation_id', corr,
+          'key', jsonb_build_object('order_id', order_id),
+          'data', jsonb_build_object(
+            'shipment_id', shipment_id,
+            'order_id', order_id,
+            'status', 'CREATED',
+            'address', jsonb_build_object(
+              'line1', '123 Main',
+              'city', 'Austin',
+              'state', 'TX',
+              'zip', '78701'
+            )
+          )
+        ),
+        now()
+      );
+    END $$;
