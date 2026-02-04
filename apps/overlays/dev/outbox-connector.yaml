@@ -5,7 +5,7 @@ metadata:
   namespace: ecomm-streaming
   annotations:
     strimzi.io/restart: "1970-01-01T00:00:00Z"
-    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-wave: "-1"
   labels:
     strimzi.io/cluster: my-connect-cluster
 spec:
