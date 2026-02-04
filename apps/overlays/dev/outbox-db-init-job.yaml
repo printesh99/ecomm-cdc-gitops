@@ -3,13 +3,18 @@ kind: Job
 metadata:
   name: outbox-db-init
   namespace: db
+  labels:
+    app.kubernetes.io/part-of: ecomm
+    argocd.argoproj.io/instance: ecomm-dev
   annotations:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
     argocd.argoproj.io/sync-wave: "0"
-    run_id: "1770203302"
+    argocd.argoproj.io/sync-options: Prune=false
+    run_id: "1770215768"
 spec:
   backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
   template:
     spec:
       restartPolicy: Never
