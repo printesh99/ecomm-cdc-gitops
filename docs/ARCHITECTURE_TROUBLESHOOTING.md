@@ -304,3 +304,15 @@ https://openshift-gitops-server-openshift-gitops.apps-crc.testing
 ```
 
 Use the `ecomm-db` app to view Jobs in namespace `db`.
+
+## Docs Generation
+
+Rendered PDFs are generated into `docs/output`:
+- `ARCHITECTURE_TROUBLESHOOTING.pdf`
+- `ARCHITECTURE_TROUBLESHOOTING_RENDERED.pdf`
+
+To regenerate:
+```
+cd docs
+make render
+```
